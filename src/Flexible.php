@@ -201,8 +201,10 @@ class Flexible extends Field
      * @param array $params
      * @return $this
      */
-    public function preset($classname, $params = [])
+    public function preset($classname, $params = [], $extra = null)
     {
+        $this->extra = $extra;
+        
         $preset = resolve($classname, $params);
 
         $preset->handle($this);
