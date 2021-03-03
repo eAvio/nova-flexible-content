@@ -68,11 +68,19 @@ export default {
     },
 
     data() {
+
+        let layoutCounter = [];
+
+        this.field.layouts.map(function(value, key) {
+            layoutCounter[value.name] = value.limit;
+        });
+
         return {
             order: [],
             groups: {},
             files: {},
-            limitCounter: this.field.limit
+            limitCounter: this.field.limit,
+            layoutCounter: layoutCounter
         };
     },
 
@@ -176,6 +184,14 @@ export default {
         addGroup(layout, attributes, key, collapsed) {
             if(!layout) return;
 
+            if(this.layoutCounter[layout.name] === 0) {
+                Nova.error(this.__('The layout :customLayout is limited to :layoutLimit', {
+                    customLayout: layout.name,
+                    layoutLimit: layout.limit,
+                }));
+                return;
+            }
+
             collapsed = collapsed || false;
 
             let fields = attributes || JSON.parse(JSON.stringify(layout.fields)),
@@ -183,6 +199,10 @@ export default {
 
             this.groups[group.key] = group;
             this.order.push(group.key);
+
+            if(this.layoutCounter[layout.name] !== null) {
+                this.layoutCounter[layout.name]--;
+            }
 
             if (this.limitCounter > 0) {
                 this.limitCounter--;
@@ -215,12 +235,18 @@ export default {
          * Remove a group
          */
         remove(key) {
+            
+            let layout = this.groups[key].name;
             let index = this.order.indexOf(key);
 
             if(index < 0) return;
 
             this.order.splice(index, 1);
             delete this.groups[key];
+
+            if(this.layoutCounter[layout.name] !== null) {
+                this.layoutCounter[layout.name]++;
+            }
 
             if (this.limitCounter >= 0) {
                 this.limitCounter++;
